@@ -1,7 +1,7 @@
 -- DAY 1 CLASSIFICATION OF SQL
 -- DDL, DML, DCL, TCL
 -- TODAY WE LEARN ONLY DDL(Data Definition Language)
--- Create, Alter, Drop 
+-- Create, Alter, Rename, Truncate, Drop 
 
 -- 1 Create 
 -- Create Database
@@ -64,3 +64,10 @@ Rename column name to stud_Name;
 
 -- Rename Table name 
 Alter table Student RENAME to students;
+
+-- 3. Rename 
+RENAME TABLE student TO students;
+
+-- TRUNCATE ---> Remove all data from a table but keeps the structure.
+TRUNCATE table students;
+
