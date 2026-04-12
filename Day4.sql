@@ -101,17 +101,154 @@ SELECT e.emp_id, e.emp_name, e.salary, d.dept_name FROM Employees e JOIN Departm
 
 
 Advanced Level 
-18. Find the highest salary in each department.  
+18. Find the highest salary in each department. 
+SELECT  d.dept_name,MAX(e.salary) as Highest_salary FROM employees  e
+JOIN departments d ON e.dept_id = d.dept_id
+GROUP BY d.dept_name;
+ 
 19. Show the second highest salary in each department.  
-20. Display employees earning more than the average salary of their department.  
-21. Find departments where the average salary is greater than 45,000.  
-22. List employees who work in the same department as 'Amit'.  
-23. Show employees who are working on the same project.  
-24. Find employees who are not working on any project but belong to a department.  
-25. Display department-wise total and average salary.  
-26. List employees whose salary is the highest in the company.  
-27. Show departments that have no projects assigned. 
+SELECT e.dept_id, MAX(e.salary) AS second_highest
+FROM Employees e
+WHERE e.salary < (
+    SELECT MAX(e2.salary)
+    FROM Employees e2
+    WHERE e2.dept_id = e.dept_id
+)
+GROUP BY e.dept_id;
 
+
+20. Display employees earning more than the average salary of their department. 
+SELECT * FROM employees e1
+where e1.salary > (SELECT AVG(salary) FROM employees e2  WHERE e1.dept_id = e2.dept_id);
+ 
+21. Find departments where the average salary is greater than 45,000.  
+SELECT dept_id, AVG(salary) FROM employees 
+GROUP BY dept_id
+HAVING AVG(salary) >45000;
+
+22. List employees who work in the same department as 'Amit'.  
+SELECT * FROM employees 
+where dept_id = (SELECT dept_id FROM employees WHERE emp_name ='Amit');
+
+23. Show employees who are working on the same project. 
+SELECT e.emp_name, p.project_name
+FROM Projects p
+JOIN Employees e ON p.emp_id = e.emp_id
+WHERE p.project_name IN (
+    SELECT project_name
+    FROM Projects
+    GROUP BY project_name
+    HAVING COUNT(emp_id) > 1
+);
+
+-- OR 
+
+SELECT p1.emp_id, p1.project_name
+FROM Projects p1
+JOIN Projects p2 
+ON p1.project_name = p2.project_name 
+AND p1.emp_id <> p2.emp_id;
+
+ 
+24. Find employees who are not working on any project but belong to a department.  
+SELECT * FROM employees
+WHERE dept_id IS NOT NULL 
+AND 
+emp_id NOT IN (SELECT emp_id from projects);
+
+
+25. Display department-wise total and average salary.  
+SELECT dept_id,  SUM(salary) AS Total_Salary, AVG(salary) AS Avg_Salary FROM employees 
+GROUP BY dept_id;
+
+26. List employees whose salary is the highest in the company.  
+SELECT * FROM employees Order BY salary desc limit 1;
+
+-- OR
+select * from employees where salary = (select MAX(salary) from employees);
+
+27. Show departments that have no projects assigned. 
+SELECT d.*
+FROM Departments d
+LEFT JOIN Employees e ON d.dept_id = e.dept_id
+LEFT JOIN Projects p ON e.emp_id = p.emp_id
+WHERE p.project_id IS NULL;
+
+Foreign Key Focus 
+28. Insert a record in Employees with a department_id that does not exist. What 
+happens?  
+INSERT INTO Employees VALUES (106, 'Rohit', 10, 30000);
+Result:  Error
+Because
+The dept_id = 10 does not exist in the Departments table.
+This violates the foreign key constraint, so the insertion fails.
+
+29. Delete a department that is referenced by employees. What error occurs?  
+The department is being used in the Employees table.
+Due to referential integrity, the parent record cannot be deleted.
+
+30. Update a department_id in Departments that is referenced in Employees. What 
+happens?  
+UPDATE Departments SET dept_id = 10 WHERE dept_id = 1;
+Error
+Because
+Employees are still referencing dept_id = 1.
+Updating it would break the foreign key relationship.
+
+31. Modify foreign key to use ON DELETE SET NULL and test behavior.  
+32. Modify foreign key to use ON UPDATE CASCADE and test updates.  
+33. Try inserting a project with a non-existing employee_id.  
+INSERT INTO Projects VALUES (7, 'AI Project', 999);
+Result:Error
+Because
+The emp_id = 999 does not exist in the Employees table.
+This violates the foreign key constraint.
+
+34. Delete an employee who is assigned to a project and observe behavior.  
+DELETE FROM Employees WHERE emp_id = 102;
+Result:Error
+Because
+This employee is referenced in the Projects table.
+So, deletion is not allowed due to foreign key constraint.
+
+35. Add a foreign key constraint after table creation and test violations. 
+ALTER TABLE Projects
+ADD CONSTRAINT fk_emp
+FOREIGN KEY (emp_id)
+REFERENCES Employees(emp_id);
+
+Challenge Level  
+36. Find employees who have worked on all projects.  
+37. List employees who share the same salary in the same department.  
+38. Find the department with the highest total salary.
+SELECT e.dept_id, dept_name
+FROM Employees e JOIN departments d ON e.dept_id = d.dept_id
+GROUP BY dept_id
+ORDER BY SUM(salary) DESC
+LIMIT 1;
+  
+39. Display top 3 highest-paid employees in each department.  
+40. Show employees who are assigned to the maximum number of projects.  
+41. Find departments where no employee earns less than 30,000.  	
+SELECT dept_id FROM employees 
+GROUP BY dept_id
+HAVING MIN(Salary)>=30000;
+
+42. List employees who are not in the IT department but work on IT projects.  
+43. Show project-wise employee count and average salary.  
+SELECT p.project_name, 
+       COUNT(e.emp_id) AS emp_count, 
+       AVG(e.salary) AS avg_salary
+FROM Projects p
+JOIN Employees e ON p.emp_id = e.emp_id
+GROUP BY p.project_name;
+
+44. Find employees who have never worked on any project.  
+SELECT * FROM employees 
+WHERE emp_id NOT IN (
+SELECT emp_id FROM projects);
+
+45. Display employees who changed departments (if history table exists).  
 */
 
 use assignment2;
@@ -120,7 +257,5 @@ desc departments;
 desc projects;
 select * from Departments;
 select * from Employees;
+select * from Projects;
 
-
-select d.dept_id, d.dept_name, Count(e.emp_id) as total_emp from  Departments d LEFT JOIN Employees e  ON e.dept_id = d.dept_id
-GROUP BY d.dept_id,d.dept_name having total_emp>2;
