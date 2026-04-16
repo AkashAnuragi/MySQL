@@ -98,7 +98,11 @@ SELECT project_id, project_name FROM Projects WHERE emp_id IS NULL;
 SELECT e.emp_id, e.emp_name, e.salary, d.dept_name FROM Employees e JOIN Departments d ON e.dept_id = d.dept_id WHERE e.salary > 40000;
 
 17. Display employee names along with their manager (self join if applicable).  
-
+SELECT e.emp_name AS employee,
+       m.emp_name AS manager
+FROM Employees e
+LEFT JOIN Employees m
+ON e.manager_id = m.emp_id;
 
 Advanced Level 
 18. Find the highest salary in each department. 
@@ -196,7 +200,42 @@ Employees are still referencing dept_id = 1.
 Updating it would break the foreign key relationship.
 
 31. Modify foreign key to use ON DELETE SET NULL and test behavior.  
+ALTER TABLE Employees
+DROP FOREIGN KEY employees_ibfk_1;
+
+ALTER TABLE Employees
+ADD CONSTRAINT fk_dept
+FOREIGN KEY (dept_id)
+REFERENCES Departments(dept_id)
+ON DELETE SET NULL
+ON UPDATE CASCADE;
+
+SELECT * FROM Employees WHERE dept_id = 1;
+
+DELETE FROM Departments WHERE dept_id = 1;
+
+SELECT * FROM Employees WHERE emp_id IN (101,106);
+
+
 32. Modify foreign key to use ON UPDATE CASCADE and test updates.  
+ALTER TABLE Employees
+DROP FOREIGN KEY fk_dept;
+
+ALTER TABLE Employees
+ADD CONSTRAINT fk_dept
+FOREIGN KEY (dept_id)
+REFERENCES Departments(dept_id)
+ON DELETE SET NULL
+ON UPDATE CASCADE;
+
+SELECT * FROM Employees WHERE dept_id = 2;
+
+UPDATE Departments
+SET dept_id = 20
+WHERE dept_id = 2;
+
+SELECT * FROM Employees WHERE emp_id IN (102,103);
+
 33. Try inserting a project with a non-existing employee_id.  
 INSERT INTO Projects VALUES (7, 'AI Project', 999);
 Result:Error
@@ -219,7 +258,22 @@ REFERENCES Employees(emp_id);
 
 Challenge Level  
 36. Find employees who have worked on all projects.  
+SELECT e.emp_id, e.emp_name
+FROM employees e
+JOIN works_on w ON e.emp_id = w.emp_id
+GROUP BY e.emp_id, e.emp_name
+HAVING COUNT(DISTINCT w.project_id) = (
+    SELECT COUNT(*) FROM projects
+);
+
 37. List employees who share the same salary in the same department.  
+SELECT e1.emp_id, e1.emp_name, e1.salary, e1.dept_id
+FROM employees e1
+JOIN employees e2 
+  ON e1.salary = e2.salary 
+  AND e1.dept_id = e2.dept_id
+  AND e1.emp_id <> e2.emp_id;
+  
 38. Find the department with the highest total salary.
 SELECT e.dept_id, dept_name
 FROM Employees e JOIN departments d ON e.dept_id = d.dept_id
@@ -229,12 +283,21 @@ LIMIT 1;
   
 39. Display top 3 highest-paid employees in each department.  
 40. Show employees who are assigned to the maximum number of projects.  
+
+
 41. Find departments where no employee earns less than 30,000.  	
 SELECT dept_id FROM employees 
 GROUP BY dept_id
 HAVING MIN(Salary)>=30000;
 
 42. List employees who are not in the IT department but work on IT projects.  
+SELECT e.emp_id, e.emp_name
+FROM Employees e
+JOIN Departments d ON e.dept_id = d.dept_id
+JOIN Projects p ON e.emp_id = p.emp_id
+WHERE d.dept_name <> 'IT'
+  AND p.project_name = 'IT';
+  
 43. Show project-wise employee count and average salary.  
 SELECT p.project_name, 
        COUNT(e.emp_id) AS emp_count, 
@@ -249,6 +312,11 @@ WHERE emp_id NOT IN (
 SELECT emp_id FROM projects);
 
 45. Display employees who changed departments (if history table exists).  
+SELECT emp_id
+FROM Employee_Department_History
+GROUP BY emp_id
+HAVING COUNT(DISTINCT dept_id) > 1;
+
 */
 
 use assignment2;
