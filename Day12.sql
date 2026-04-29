@@ -175,9 +175,7 @@ BEGIN
 END$$ 
 DELIMITER ;
  
- CALL book_appointment(5, 2, '2025-07-01', @new_id);
-SELECT @new_id AS new_appointment_id;
-
+ 
 
 select * from appointments ;
 SELECT * FROM doctors;
