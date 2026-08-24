@@ -133,7 +133,9 @@ Mixed Clauses (Real Interview Type)
 39. City-wise employee count dikhao jahan count > 1 
 40. Highest paid employee from each department find karo 
 */
-
+SELECT department, AVG(salary) AS avg_salary FROM employees
+GROUP BY department HAVING AVG(salary) > 50000
+ORDER BY avg_salary DESC;
 
 
 
